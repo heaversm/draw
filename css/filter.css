@@ -1,0 +1,7 @@
+body {
+    background: rgb(253, 109, 109);
+}
+
+path {
+    filter: url('../images/filters.svg#svg-blur');
+}
