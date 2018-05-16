@@ -7,7 +7,7 @@ var markPosArr = [
 ]
 var drawingsArr = [];
 var markWidth = 0;
-var controlVariance = 30;
+var controlVariance = 150;
 
 var firstCoord = { x: 0, y: 0 }
 var lastCoord = { x: 0, y: 0 }
@@ -28,12 +28,11 @@ function drawConnector() {
     var control1Y = Math.min(firstCoord.y, lastCoord.y) + (Math.abs((firstCoord.y - lastCoord.y) * .333)) + controlVariance;
     var controlPoint1 = new Two.Vector(control1X, control1Y);
 
-    var control2X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * .666));
+    var control2X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * .888));
     var control2Y = Math.min(firstCoord.y, lastCoord.y) + (Math.abs((firstCoord.y - lastCoord.y) * .666)) - controlVariance;
     var controlPoint2 = new Two.Vector(control2X, control2Y);
 
     console.log(firstCoord, lastCoord, controlPoint1);
-    //console.log(controlPoint1);
 
     line = two.makeCurve([new Two.Vector(lastCoord.x, lastCoord.y), controlPoint1, controlPoint2, new Two.Vector(firstCoord.x, firstCoord.y)], true);
     line.noFill().stroke = 'white';
