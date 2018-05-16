@@ -7,6 +7,7 @@ var markPosArr = [
 ]
 var drawingsArr = [];
 var markWidth = 0;
+var controlVariance = 30;
 
 var firstCoord = { x: 0, y: 0 }
 var lastCoord = { x: 0, y: 0 }
@@ -21,8 +22,20 @@ function drawConnector() {
         fullscreen: true,
         autostart: true
     }).appendTo(document.body);
+
     var line = new Two.Vector(), randomness = 0;
-    line = two.makeCurve([new Two.Vector(lastCoord.x, lastCoord.y), new Two.Vector(firstCoord.x, firstCoord.y)], true);
+    var control1X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * .333));
+    var control1Y = Math.min(firstCoord.y, lastCoord.y) + (Math.abs((firstCoord.y - lastCoord.y) * .333)) + controlVariance;
+    var controlPoint1 = new Two.Vector(control1X, control1Y);
+
+    var control2X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * .666));
+    var control2Y = Math.min(firstCoord.y, lastCoord.y) + (Math.abs((firstCoord.y - lastCoord.y) * .666)) - controlVariance;
+    var controlPoint2 = new Two.Vector(control2X, control2Y);
+
+    console.log(firstCoord, lastCoord, controlPoint1);
+    //console.log(controlPoint1);
+
+    line = two.makeCurve([new Two.Vector(lastCoord.x, lastCoord.y), controlPoint1, controlPoint2, new Two.Vector(firstCoord.x, firstCoord.y)], true);
     line.noFill().stroke = 'white';
     line.linewidth = lineWidth;
     line.cap = 'round';
