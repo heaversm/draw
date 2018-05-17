@@ -41,8 +41,9 @@ function drawConnector() {
     line.noFill().stroke = 'white';
     line.linewidth = lineWidth;
     line.cap = 'round';
-    //console.log(line.vertices);
-    //line.subdivide();
+    var firstVertex = line.vertices[0];
+    line.subdivide();
+    line.vertices[0] = firstVertex;
     line.total = calculateDistance(line);
     connector = two;
     connectorLine = line;
@@ -182,7 +183,6 @@ function calculateDistances(group) {
 	return _.map(group.children, function(child) {
 		var d = 0,
             a;
-        //console.log(child);
 		_.each(child.vertices, function(b, i) {
 			if (i > 0) {
 				d += a.distanceTo(b);
