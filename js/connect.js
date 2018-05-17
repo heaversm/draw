@@ -12,6 +12,9 @@ var controlVariance = 150;
 var firstCoord = { x: 0, y: 0 }
 var lastCoord = { x: 0, y: 0 }
 
+var connector = null;
+var connectorLine = null;
+
 $(function () {
     drawMark();
 });
@@ -32,17 +35,50 @@ function drawConnector() {
     var control2Y = Math.min(firstCoord.y, lastCoord.y) + (Math.abs((firstCoord.y - lastCoord.y) * .666)) - controlVariance;
     var controlPoint2 = new Two.Vector(control2X, control2Y);
 
-    console.log(firstCoord, lastCoord, controlPoint1);
+    //console.log(firstCoord, lastCoord, controlPoint1);
 
     line = two.makeCurve([new Two.Vector(lastCoord.x, lastCoord.y), controlPoint1, controlPoint2, new Two.Vector(firstCoord.x, firstCoord.y)], true);
     line.noFill().stroke = 'white';
     line.linewidth = lineWidth;
     line.cap = 'round';
+    //console.log(line.vertices);
+    //line.subdivide();
+    line.total = calculateDistance(line);
+    connector = two;
+    connectorLine = line;
+
+    function calculateDistance(line) {
+        var d = 0,
+            a;
+        _.each(line.vertices, function (b, i) {
+            if (i > 0) {
+                d += a.distanceTo(b);
+            }
+            a = b;
+        });
+        return d;
+    }
+    //console.log(line.total);
+    var t = 0;
+    two.bind('update', function () {
+        if (t < 0.9999) {
+            t += 0.00625;
+            var traversed = t * line.total;
+            //var pct = cmap(traversed, 0, line.total, 0, 1);
+            var pct = map(traversed, 0, line.total, 0, 1);
+            //console.log(pct);
+            line.ending = pct;
+        } else {
+            two.pause();
+            two.unbind('update');
+        }
+    });
 
 }
 
 function drawMark() {
     $.get(`../images/${marksArr[curMarkIndex]}`, function (doc) {
+        console.log(doc);
         var two = new Two({
             type: Two.Types['svg'],
             fullscreen: true
@@ -101,6 +137,7 @@ function drawMark() {
                     }
 
                     two.pause();
+                    two.unbind('update');
                     if (curMarkIndex < marksArr.length - 1) {
                         curMarkIndex++;
                         drawMark();
@@ -127,18 +164,15 @@ function drawMark() {
             var current = 0;
 
             _.each(group.children, function (child, j) {
+                //console.log(child);
                 var distance = group.distances[i];
                 var min = current;
                 var max = current + distance;
                 var pct = cmap(traversed, min, max, 0, 1);
+                //console.log(pct);
                 child.ending = pct;
                 current = max;
                 i++;
-                if (last) {
-                    if (j === group.children.length-1) {
-                        console.log(child);
-                    }
-                }
             });
         }
     });
@@ -147,7 +181,8 @@ function drawMark() {
 function calculateDistances(group) {
 	return _.map(group.children, function(child) {
 		var d = 0,
-			a;
+            a;
+        //console.log(child);
 		_.each(child.vertices, function(b, i) {
 			if (i > 0) {
 				d += a.distanceTo(b);
