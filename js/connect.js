@@ -45,6 +45,8 @@ function drawConnector() {
     line.vertices[0] = firstVertex;
     line.total = calculateDistance(line);
 
+    const animTime = 10 / line.total;
+
     function calculateDistance(line) {
         var d = 0,
             a;
@@ -59,7 +61,7 @@ function drawConnector() {
     var t = 0;
     two.bind('update', function () {
         if (t < 0.9999) {
-            t += 0.00625; //MH - should be dynamic
+            t += animTime; //MH - should be dynamic
             var traversed = t * line.total;
             var pct = map(traversed, 0, line.total, 0, 1);
             line.ending = pct;
@@ -100,6 +102,8 @@ function drawMark() {
             storyMark.total += d;
         });
 
+        const animTime = 10 / storyMark.total;
+
         clearT();
         resize();
 
@@ -121,7 +125,7 @@ function drawMark() {
             .bind('resize', resize)
             .bind('update', function () {
                 if (t < 0.9999) {
-                    t += 0.00625;
+                    t += animTime;
                     setEnding(storyMark, t);
                 } else {
                     if (curMarkIndex < marksArr.length - 1) {
