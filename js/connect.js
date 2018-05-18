@@ -43,8 +43,6 @@ function drawConnector() {
     var control2Y = firstCoord.y - (firstSlope * (firstCoord.x - control2X));
     var controlPoint2 = new Two.Vector(control2X, control2Y);
 
-    //console.log(control1Percent,control2Percent,controlPoint1,controlPoint2)
-
     line = two.makeCurve([new Two.Vector(lastCoord.x, lastCoord.y), controlPoint1, controlPoint2, new Two.Vector(firstCoord.x, firstCoord.y)], true);
     line.noFill().stroke = 'white';
     line.linewidth = lineWidth;
@@ -53,7 +51,6 @@ function drawConnector() {
     line.subdivide();
     line.vertices[0] = firstVertex;
     line.total = calculateDistance(line);
-    //line.scale = markScale;
 
     const animTime = 10 / line.total; //amount of time in ms to wait between each update call
 
@@ -110,21 +107,10 @@ function drawMark() {
         _.each(storyMark.distances, function (d) {
             storyMark.total += d;
         });
-        // var markWidth = storyMark.getBoundingClientRect().width
-        // var markWidthPct = storyMark.getBoundingClientRect().width / window.innerWidth;
-        // var numMarks = marksArr.length;
-        // var middleMark = marksArr.length / 2;
-        // var markPos = ((curMarkIndex + 1) / (numMarks + 1))*window.innerWidth;
-
-
-        // console.log(storyMark.getBoundingClientRect().width, storyMark.getBoundingClientRect().height,window.innerWidth,window.innerHeight);
 
         const animTime = 10 / storyMark.total;
 
         clearT();
-        //resize(markPos,markWidth);
-
-        //storyMark.scale = markScale;
         var markPosX = (curMarkIndex * markWidth) + (curMarkIndex > 0 ? markSpacing : 0);
         storyMark.translation.set(markPosX, markPosY);
 
@@ -143,15 +129,6 @@ function drawMark() {
         var thisLastCoord = {};
         thisLastCoord.x = storyMark.translation.x + lastChild.translation.x + lastVertex.x;
         thisLastCoord.y = storyMark.translation.y + lastChild.translation.y + lastVertex.y;
-
-        /*
-        Visualize vertexes used to calculate slope here
-        var p1 = two.makeCircle(lastChild.vertices[lastVertexIndex].x + storyMark.translation.x + lastChild.translation.x, lastChild.vertices[lastVertexIndex].y + storyMark.translation.y + lastChild.translation.y, 5);
-        var p2 = two.makeCircle(lastChild.vertices[lastVertexIndex-5].x + storyMark.translation.x + lastChild.translation.x, lastChild.vertices[lastVertexIndex-5].y + storyMark.translation.y + lastChild.translation.y, 5);
-
-        var p3 = two.makeCircle(firstChild.vertices[0].x + storyMark.translation.x + firstChild.translation.x, firstChild.vertices[0].y + storyMark.translation.y + firstChild.translation.y, 5);
-        var p4 = two.makeCircle(firstChild.vertices[5].x + storyMark.translation.x + firstChild.translation.x, firstChild.vertices[5].y + storyMark.translation.y + firstChild.translation.y, 5);
-        */
 
         var lastSlope = (lastChild.vertices[lastVertexIndex].y - lastChild.vertices[lastVertexIndex - 5].y) / (lastChild.vertices[lastVertexIndex].x - lastChild.vertices[lastVertexIndex - 5].x);
 
@@ -185,16 +162,6 @@ function drawMark() {
             curMarkIndex = 0;
 
             storyMarksArr[curMarkIndex].instance.play();
-        }
-
-        function resize(markPos,markWidth) {
-            //storyMark.translation.set(markAdj * window.innerWidth, .25 * window.innerHeight);
-            //storyMark.translation.set(0,0);
-            //MH - curMarkIndex won't work on subsequent resize
-            //MH - needs work
-            //var markTrans = markPos - (markWidth / 2);
-            //var markTrans = markPos;
-            //storyMark.translation.set(markTrans, .25 * //window.innerHeight)
         }
 
         function setEnding(group, t, last = false) {
