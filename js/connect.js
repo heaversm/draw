@@ -1,15 +1,17 @@
 const lineWidth = 5; //width of line to draw
 const slopeVertexDifferential = 5; //number of points between which to calculate the beginning or ending slope of a line
+var markWidth = 365;
+var markHeight = 418;
+var markSpacing = 20;
 var curMarkIndex = 0;
-var marksArr = ['line-house-rev.svg', 'line-investing.svg'];
-
-//percentage across screen at which the top left of each mark should be placed. //MH - should be dynamic
-var markPosArr = [
-    { x: .2, y: .25 },
-    { x: .6, y: .25 }
-]
-
+var marksArr = ['line-house-rev.svg', 'line-loan.svg','line-investing.svg'];
 var storyMarksArr = [];
+var $marksHolder = document.getElementById('marksHolder');
+
+markScale = window.innerWidth / (markWidth * marksArr.length);
+console.log(markScale);
+markPosY = (window.innerHeight / 2) - (markHeight / 2);
+
 
 $(function () {
     drawMark();
@@ -20,7 +22,7 @@ function drawConnector() {
         type: Two.Types['svg'],
         fullscreen: true,
         autostart: true
-    }).appendTo(document.body);
+    }).appendTo($marksHolder);
 
     var firstCoord = storyMarksArr[curMarkIndex + 1].firstCoord;
     var lastCoord = storyMarksArr[curMarkIndex].lastCoord;
@@ -41,9 +43,6 @@ function drawConnector() {
     var control2Y = firstCoord.y - (firstSlope * (firstCoord.x - control2X));
     var controlPoint2 = new Two.Vector(control2X, control2Y);
 
-    var p1 = two.makeCircle(controlPoint1.x, controlPoint1.y, 5);
-    var p2 = two.makeCircle(controlPoint2.x, controlPoint2.y, 5);
-
     //console.log(control1Percent,control2Percent,controlPoint1,controlPoint2)
 
     line = two.makeCurve([new Two.Vector(lastCoord.x, lastCoord.y), controlPoint1, controlPoint2, new Two.Vector(firstCoord.x, firstCoord.y)], true);
@@ -54,6 +53,7 @@ function drawConnector() {
     line.subdivide();
     line.vertices[0] = firstVertex;
     line.total = calculateDistance(line);
+    //line.scale = markScale;
 
     const animTime = 10 / line.total; //amount of time in ms to wait between each update call
 
@@ -90,7 +90,7 @@ function drawMark() {
         var two = new Two({
             type: Two.Types['svg'],
             fullscreen: true
-        }).appendTo(document.body);
+        }).appendTo($marksHolder);
         var storyMark = two.interpret($(doc).find('svg')[0]);
         storyMark.subdivide();
         storyMark.noFill();
@@ -110,11 +110,23 @@ function drawMark() {
         _.each(storyMark.distances, function (d) {
             storyMark.total += d;
         });
+        // var markWidth = storyMark.getBoundingClientRect().width
+        // var markWidthPct = storyMark.getBoundingClientRect().width / window.innerWidth;
+        // var numMarks = marksArr.length;
+        // var middleMark = marksArr.length / 2;
+        // var markPos = ((curMarkIndex + 1) / (numMarks + 1))*window.innerWidth;
+
+
+        // console.log(storyMark.getBoundingClientRect().width, storyMark.getBoundingClientRect().height,window.innerWidth,window.innerHeight);
 
         const animTime = 10 / storyMark.total;
 
         clearT();
-        resize();
+        //resize(markPos,markWidth);
+
+        //storyMark.scale = markScale;
+        var markPosX = (curMarkIndex * markWidth) + (curMarkIndex > 0 ? markSpacing : 0);
+        storyMark.translation.set(markPosX, markPosY);
 
         var firstChild = storyMark.children[0];
         var firstVertex = firstChild.vertices[0];
@@ -164,18 +176,25 @@ function drawMark() {
             lastCoord: thisLastCoord,
             firstSlope: firstSlope,
             lastSlope: lastSlope,
+            width: storyMark.getBoundingClientRect().width,
         });
         if (curMarkIndex < marksArr.length - 1) {
             curMarkIndex++;
             drawMark();
         } else { //all marks drawn, play the first
             curMarkIndex = 0;
+
             storyMarksArr[curMarkIndex].instance.play();
         }
-        //two.play();
 
-        function resize() {
-            storyMark.translation.set(markPosArr[curMarkIndex].x * two.width, markPosArr[curMarkIndex].y * two.height);
+        function resize(markPos,markWidth) {
+            //storyMark.translation.set(markAdj * window.innerWidth, .25 * window.innerHeight);
+            //storyMark.translation.set(0,0);
+            //MH - curMarkIndex won't work on subsequent resize
+            //MH - needs work
+            //var markTrans = markPos - (markWidth / 2);
+            //var markTrans = markPos;
+            //storyMark.translation.set(markTrans, .25 * //window.innerHeight)
         }
 
         function setEnding(group, t, last = false) {
