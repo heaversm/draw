@@ -1,15 +1,13 @@
-var lineWidth = 5;
+const lineWidth = 5; //width of line to draw
+const slopeVertexDifferential = 5; //number of points between which to calculate the beginning or ending slope of a line
 var curMarkIndex = 0;
 var marksArr = ['line-house-rev.svg', 'line-investing.svg'];
+
+//percentage across screen at which the top left of each mark should be placed. //MH - should be dynamic
 var markPosArr = [
     { x: .2, y: .25 },
     { x: .6, y: .25 }
 ]
-var markWidth = 0;
-var controlVariance = 150;
-
-var firstCoord = { x: 0, y: 0 }
-var lastCoord = { x: 0, y: 0 }
 
 var storyMarksArr = [];
 
@@ -24,17 +22,29 @@ function drawConnector() {
         autostart: true
     }).appendTo(document.body);
 
-    firstCoord = storyMarksArr[curMarkIndex + 1].firstCoord;
-    lastCoord = storyMarksArr[curMarkIndex].lastCoord;
+    var firstCoord = storyMarksArr[curMarkIndex + 1].firstCoord;
+    var lastCoord = storyMarksArr[curMarkIndex].lastCoord;
+
+    var lastSlope = storyMarksArr[curMarkIndex].lastSlope;
+    var firstSlope = storyMarksArr[curMarkIndex + 1].firstSlope;
 
     var line = new Two.Vector(), randomness = 0;
-    var control1X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * .333));
-    var control1Y = Math.min(firstCoord.y, lastCoord.y) + (Math.abs((firstCoord.y - lastCoord.y) * .333)) + controlVariance;
-    var controlPoint1 = new Two.Vector(control1X, control1Y);
+    var control1Percent = map(lastSlope, .1, 10, .111, .333);
+    var control1X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * control1Percent));
 
-    var control2X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * .888));
-    var control2Y = Math.min(firstCoord.y, lastCoord.y) + (Math.abs((firstCoord.y - lastCoord.y) * .666)) - controlVariance;
+    var control1Y = (lastSlope * (control1X - lastCoord.x)) + lastCoord.y;
+
+    var controlPoint1 = new Two.Vector(control1X, control1Y);
+    var control2Percent = map(firstSlope, .1, 10, .666, .999);
+    var control2X = Math.min(firstCoord.x, lastCoord.x) + (Math.abs((firstCoord.x - lastCoord.x) * control2Percent));
+
+    var control2Y = firstCoord.y - (firstSlope * (firstCoord.x - control2X));
     var controlPoint2 = new Two.Vector(control2X, control2Y);
+
+    var p1 = two.makeCircle(controlPoint1.x, controlPoint1.y, 5);
+    var p2 = two.makeCircle(controlPoint2.x, controlPoint2.y, 5);
+
+    //console.log(control1Percent,control2Percent,controlPoint1,controlPoint2)
 
     line = two.makeCurve([new Two.Vector(lastCoord.x, lastCoord.y), controlPoint1, controlPoint2, new Two.Vector(firstCoord.x, firstCoord.y)], true);
     line.noFill().stroke = 'white';
@@ -45,7 +55,7 @@ function drawConnector() {
     line.vertices[0] = firstVertex;
     line.total = calculateDistance(line);
 
-    const animTime = 10 / line.total;
+    const animTime = 10 / line.total; //amount of time in ms to wait between each update call
 
     function calculateDistance(line) {
         var d = 0,
@@ -81,7 +91,6 @@ function drawMark() {
             type: Two.Types['svg'],
             fullscreen: true
         }).appendTo(document.body);
-        markWidth = two.width / marksArr.length;
         var storyMark = two.interpret($(doc).find('svg')[0]);
         storyMark.subdivide();
         storyMark.noFill();
@@ -113,6 +122,8 @@ function drawMark() {
         thisFirstCoord.x = storyMark.translation.x + firstChild.translation.x + firstVertex.x;
         thisFirstCoord.y = storyMark.translation.y + firstChild.translation.y + firstVertex.y;
 
+        var firstSlope = (firstChild.vertices[5].y - firstChild.vertices[0].y) / (firstChild.vertices[5].x - firstChild.vertices[0].x);
+
         var lastChildIndex = storyMark.children.length - 1;
         var lastChild = storyMark.children[lastChildIndex];
         var lastVertexIndex = lastChild.vertices.length - 1;
@@ -120,6 +131,17 @@ function drawMark() {
         var thisLastCoord = {};
         thisLastCoord.x = storyMark.translation.x + lastChild.translation.x + lastVertex.x;
         thisLastCoord.y = storyMark.translation.y + lastChild.translation.y + lastVertex.y;
+
+        /*
+        Visualize vertexes used to calculate slope here
+        var p1 = two.makeCircle(lastChild.vertices[lastVertexIndex].x + storyMark.translation.x + lastChild.translation.x, lastChild.vertices[lastVertexIndex].y + storyMark.translation.y + lastChild.translation.y, 5);
+        var p2 = two.makeCircle(lastChild.vertices[lastVertexIndex-5].x + storyMark.translation.x + lastChild.translation.x, lastChild.vertices[lastVertexIndex-5].y + storyMark.translation.y + lastChild.translation.y, 5);
+
+        var p3 = two.makeCircle(firstChild.vertices[0].x + storyMark.translation.x + firstChild.translation.x, firstChild.vertices[0].y + storyMark.translation.y + firstChild.translation.y, 5);
+        var p4 = two.makeCircle(firstChild.vertices[5].x + storyMark.translation.x + firstChild.translation.x, firstChild.vertices[5].y + storyMark.translation.y + firstChild.translation.y, 5);
+        */
+
+        var lastSlope = (lastChild.vertices[lastVertexIndex].y - lastChild.vertices[lastVertexIndex - 5].y) / (lastChild.vertices[lastVertexIndex].x - lastChild.vertices[lastVertexIndex - 5].x);
 
         two
             .bind('resize', resize)
@@ -140,6 +162,8 @@ function drawMark() {
             instance: two,
             firstCoord: thisFirstCoord,
             lastCoord: thisLastCoord,
+            firstSlope: firstSlope,
+            lastSlope: lastSlope,
         });
         if (curMarkIndex < marksArr.length - 1) {
             curMarkIndex++;
@@ -173,27 +197,27 @@ function drawMark() {
 }
 
 function calculateDistances(group) {
-	return _.map(group.children, function(child) {
-		var d = 0,
+    return _.map(group.children, function (child) {
+        var d = 0,
             a;
-		_.each(child.vertices, function(b, i) {
-			if (i > 0) {
-				d += a.distanceTo(b);
-			}
-			a = b;
-		});
-		return d;
-	});
+        _.each(child.vertices, function (b, i) {
+            if (i > 0) {
+                d += a.distanceTo(b);
+            }
+            a = b;
+        });
+        return d;
+    });
 }
 
 function clamp(v, min, max) {
-	return Math.max(Math.min(v, max), min);
+    return Math.max(Math.min(v, max), min);
 }
 
 function map(v, i1, i2, o1, o2) {
-	return o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
+    return o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
 }
 
 function cmap(v, i1, i2, o1, o2) {
-	return clamp(map(v, i1, i2, o1, o2), o1, o2);
+    return clamp(map(v, i1, i2, o1, o2), o1, o2);
 }
